@@ -3,5 +3,5 @@
 
 ### Технологический стек:
 - Python 3.8+
-- Mathplotlib
+- Matplotlib
 - ...
