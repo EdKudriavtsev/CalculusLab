@@ -1,2 +1,7 @@
 # CalculusLab
-A repository for calculus integrals lab
+Репозиторий для лабораторной работы по определенному интегралу Римана
+
+### Технологический стек:
+- Python 3.8+
+- Mathplotlib
+- ...
