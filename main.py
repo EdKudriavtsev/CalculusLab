@@ -141,6 +141,7 @@ class Integral:
             y.append(self.function.evaluate(curr))
             curr += delta
         plt.plot(x, y, color='r')
+        plt.title("f(x) = " + self.function.string_value())
         plt.show()
 
 
