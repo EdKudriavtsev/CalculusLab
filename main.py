@@ -14,19 +14,44 @@ class Operation:
         return self.operation(*map(lambda x: x.evaluate(*args), self.arguments))
 
 
-class Degree(Operation):
+class BinaryOperation(Operation):
+    def __init__(self, operation, left_expression, right_expression):
+        super().__init__(operation, left_expression, right_expression)
+
+    def string_value(self, sign):
+        return "(" + self.arguments[0].string_value() + " " + sign + " " + self.arguments[1].string_value() + ")"
+
+
+class UnaryOperation(Operation):
+    def __init__(self, operation, expression):
+        super().__init__(operation, expression)
+
+    def string_value(self, sign):
+        return sign + self.arguments[0].string_value()
+
+
+class Power(BinaryOperation):
     def __init__(self, left_expression, right_expression):
         super().__init__(lambda x, y: x ** y, left_expression, right_expression)
 
+    def string_value(self):
+        return BinaryOperation.string_value(self, "^")
 
-class Multiply(Operation):
+
+class Multiply(BinaryOperation):
     def __init__(self, left_expression, right_expression):
         super().__init__(lambda x, y: x * y, left_expression, right_expression)
 
+    def string_value(self):
+        return BinaryOperation.string_value(self, "*")
 
-class UnaryMinus(Operation):
+
+class Negate(UnaryOperation):
     def __init__(self, expression):
         super().__init__(lambda x: -x, expression)
+
+    def string_value(self):
+        return UnaryOperation.string_value(self, "-")
 
 
 class Const:
@@ -36,6 +61,11 @@ class Const:
     def evaluate(self, *args):
         return self.constant
 
+    def string_value(self):
+        if self.constant == math.e:
+            return "e"
+        return str(self.constant)
+
 
 class Variable:
     def __init__(self, variable):
@@ -43,6 +73,9 @@ class Variable:
 
     def evaluate(self, *args):
         return args[["x", "y", "z"].index(self.variable)]
+
+    def string_value(self):
+        return str(self.variable)
 
 
 class EquipmentType(Enum):
@@ -72,6 +105,9 @@ class Equipment:
                 raise Exception("Invalid format of equipment")
             segment_start += self.delta
 
+    def string_value(self):
+        return "[" + str(self.segment_start) + ", " + str(self.segment_end) + "]"
+
 
 class Integral:
     def __init__(self, function):
@@ -83,6 +119,11 @@ class Integral:
             integral_sum += self.function.evaluate(x) * equipment.delta
         return integral_sum
 
+
+    def string_value(self):
+        return self.function.string_value()
+
+
     def graphic(self, equipment):
         sum_x = []
         for i in range(0, equipment.split_points_number):
@@ -90,7 +131,7 @@ class Integral:
         sum_y = []
         for i in range(equipment.split_points_number):
             sum_y.append(self.function.evaluate(equipment.points[i]))
-        plt.bar(sum_x, sum_y, equipment.delta, align='edge')
+        plt.bar(sum_x, sum_y, equipment.delta, align='edge', edgecolor='black')
         x = []
         y = []
         curr = equipment.segment_start
@@ -113,25 +154,33 @@ third_equipment = Equipment(-1, 1, split_points, equipment_type)
 fourth_equipment = Equipment(0, 0.5, split_points, equipment_type)
 fifth_equipment = Equipment(0, 1, split_points, equipment_type)
 
-first_integral = Integral(Degree(Const(5), Variable("x")))
-second_integral = Integral(Degree(Const(math.e), Variable("x")))
-third_integral = Integral(Degree(Const(math.e), UnaryMinus(Variable("x"))))
-fourth_integral = Integral(Degree(Const(math.e), Multiply(Const(3), Variable("x"))))
-fifth_integral = Integral(Degree(Const(math.e), Multiply(Const(2), Variable("x"))))
+first_integral = Integral(Power(Const(5), Variable("x")))
+second_integral = Integral(Power(Const(math.e), Variable("x")))
+third_integral = Integral(Power(Const(math.e), Negate(Variable("x"))))
+fourth_integral = Integral(Power(Const(math.e), Multiply(Const(3), Variable("x"))))
+fifth_integral = Integral(Power(Const(math.e), Multiply(Const(2), Variable("x"))))
 
-sys.stdout.write("Function: f(x) = 5^x     Integration interval: [0, 3]    Calculated value: ")
-sys.stdout.write(str(first_integral.evaluate(first_equipment)) + "\n")
-sys.stdout.write("Function: f(x) = e^x     Integration interval: [0, 1]    Calculated value: ")
-sys.stdout.write(str(second_integral.evaluate(second_equipment)) + "\n")
-sys.stdout.write("Function: f(x) = e^(-x)  Integration interval: [-1, 1]   Calculated value: ")
-sys.stdout.write(str(third_integral.evaluate(third_equipment)) + "\n")
-sys.stdout.write("Function: f(x) = e^(3x)  Integration interval: [0, 0.5]  Calculated value: ")
-sys.stdout.write(str(fourth_integral.evaluate(fourth_equipment)) + "\n")
-sys.stdout.write("Function: f(x) = 2^(2x)  Integration interval: [0, 1]    Calculated value: ")
-sys.stdout.write(str(fifth_integral.evaluate(fifth_equipment)) + "\n")
-
+sys.stdout.write("Function: f(x) = " + first_integral.string_value())
+sys.stdout.write(" Integration interval: " + first_equipment.string_value())
+sys.stdout.write(" Calculated value: " + str(first_integral.evaluate(first_equipment)) + "\n")
 first_integral.graphic(first_equipment)
+
+sys.stdout.write("Function: f(x) = " + second_integral.string_value())
+sys.stdout.write(" Integration interval: " + second_equipment.string_value())
+sys.stdout.write(" Calculated value: " + str(second_integral.evaluate(second_equipment)) + "\n")
 second_integral.graphic(second_equipment)
+
+sys.stdout.write("Function: f(x) = " + third_integral.string_value())
+sys.stdout.write(" Integration interval: " + third_equipment.string_value())
+sys.stdout.write(" Calculated value: " + str(third_integral.evaluate(third_equipment)) + "\n")
 third_integral.graphic(third_equipment)
+
+sys.stdout.write("Function: f(x) = " + fourth_integral.string_value())
+sys.stdout.write(" Integration interval: " + fourth_equipment.string_value())
+sys.stdout.write(" Calculated value: " + str(fourth_integral.evaluate(fourth_equipment)) + "\n")
 fourth_integral.graphic(fourth_equipment)
+
+sys.stdout.write("Function: f(x) = " + fifth_integral.string_value())
+sys.stdout.write(" Integration interval: " + fifth_equipment.string_value())
+sys.stdout.write(" Calculated value: " + str(fifth_integral.evaluate(fifth_equipment)) + "\n")
 fifth_integral.graphic(fifth_equipment)
